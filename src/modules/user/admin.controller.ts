@@ -59,3 +59,70 @@ export const getAllRides = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error", err });
   }
 };
+
+export const getUserStats = async (req: Request, res: Response) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalAdmins = await User.countDocuments({ role: "admin" });
+    const totalRiders = await User.countDocuments({ role: "rider" });
+    const totalDrivers = await User.countDocuments({ role: "driver" });
+
+    res.status(200).json({
+      totalUsers,
+      totalAdmins,
+      totalRiders,
+      totalDrivers,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", err });
+  }
+};
+
+export const getUserStatusStats = async (req: Request, res: Response) => {
+  try {
+    const activeUsers = await User.countDocuments({ status: "active" });
+    const blockedUsers = await User.countDocuments({ status: "blocked" });
+    const suspendedUsers = await User.countDocuments({ status: "suspended" });
+
+    res.status(200).json({ activeUsers, blockedUsers, suspendedUsers });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", err });
+  }
+};
+
+
+export const getRideStats = async (req: Request, res: Response) => {
+  try {
+    const totalRides = await Ride.countDocuments();
+    const completedRides = await Ride.countDocuments({ status: "completed" });
+    const cancelledRides = await Ride.countDocuments({ status: "cancelled" });
+    const inProgressRides = await Ride.countDocuments({
+      status: { $in: ["accepted", "picked_up", "in_transit"] },
+    });
+
+    res.status(200).json({
+      totalRides,
+      completedRides,
+      cancelledRides,
+      inProgressRides,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", err });
+  }
+};
+
+
+export const getDriverRatings = async (req: Request, res: Response) => {
+  try {
+    const drivers = await User.find({ role: "driver" });
+
+    const ratings = drivers.map((d) => d.averageRating || 0);
+    const totalDrivers = ratings.length;
+    const avgRating =
+      totalDrivers > 0 ? ratings.reduce((a, b) => a + b, 0) / totalDrivers : 0;
+
+    res.status(200).json({ totalDrivers, avgRating });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", err });
+  }
+};

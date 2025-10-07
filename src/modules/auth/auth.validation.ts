@@ -10,18 +10,18 @@ export const registerSchema = z.object({
         message: "Role must be one of admin, rider, driver",
       }),
       vehicleInfo: z.string().optional(),
-      address: z.string().optional(),
+      address: z.string().min(1, "Address is required"),
     })
     .refine(
       (data) => {
         if (data.role === "driver") {
-          return data.vehicleInfo && data.address;
+          return !!data.vehicleInfo;
         }
         return true;
       },
       {
-        message: "Drivers must provide vehicleInfo and address",
-        path: ["address"],
+        message: "Drivers must provide vehicleInfo",
+        path: ["vehicleInfo"],
       }
     ),
 });
@@ -33,5 +33,18 @@ export const loginSchema = z.object({
       .email("Valid email is required")
       .transform((val) => val.toLowerCase()),
     password: z.string().min(1, "Password is required"),
+  }),
+});
+
+export const updateProfileSchema = z.object({
+  body: z.object({
+    name: z.string().min(1, "Name cannot be empty").optional(),
+    email: z.string().email("Valid email required").optional(),
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .optional(),
+    vehicleInfo: z.string().optional(),
+    address: z.string().optional(),
   }),
 });

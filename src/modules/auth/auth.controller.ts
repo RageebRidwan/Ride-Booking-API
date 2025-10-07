@@ -4,7 +4,7 @@ import jwt, { SignOptions } from "jsonwebtoken";
 import { IUser, User } from "../user/user.model";
 import bcrypt from "bcryptjs";
 import { AuthRequest } from "../../middlewares/auth.middleware";
-import axios from "axios";
+import { getCoordinatesFromAddress } from "../../utils/geoCode";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey123";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1d";
@@ -21,7 +21,7 @@ const generateToken = (userId: string, role: string) => {
   return jwt.sign(payload, secret, options);
 };
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, password, role, vehicleInfo, address } = req.body;
 
@@ -32,33 +32,29 @@ export const register = async (req: Request, res: Response) => {
     if (existing)
       return res.status(400).json({ message: "Email already in use" });
 
-    let userData: any = { name, email: email.toLowerCase(), password, role };
+    // ✅ For both riders and drivers, address is required
+    if ((role === "rider" || role === "driver") && !address)
+      return res.status(400).json({ message: "Address is required" });
+
+    const userData: any = {
+      name,
+      email: email.toLowerCase(),
+      password,
+      role,
+    };
+
+    if (address) {
+      userData.address = address;
+      userData.location = await getCoordinatesFromAddress(address);
+    }
 
     if (role === "driver") {
-      if (!vehicleInfo || !address)
+      if (!vehicleInfo)
         return res
           .status(400)
-          .json({ message: "Drivers must provide vehicleInfo and address" });
-
-      // Geocode address → coordinates
-      const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          address
-        )}`
-      );
-
-      if (response.data.length > 0) {
-        const { lat, lon } = response.data[0];
-        userData.location = {
-          type: "Point",
-          coordinates: [parseFloat(lon), parseFloat(lat)],
-        };
-      } else {
-        userData.location = { type: "Point", coordinates: [0, 0] };
-      }
+          .json({ message: "Drivers must provide vehicleInfo" });
 
       userData.vehicleInfo = vehicleInfo;
-      userData.address = address;
       userData.approvalStatus = "pending";
       userData.isOnline = false;
     }
@@ -67,10 +63,11 @@ export const register = async (req: Request, res: Response) => {
     await user.save();
 
     user.password = undefined;
-
     const token = generateToken(user._id, user.role);
+
     res.status(201).json({ token, user });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error", error });
   }
 };
@@ -148,45 +145,29 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id; // from protect middleware
+    const userId = req.user?.id;
     const { name, email, password, vehicleInfo, address } = req.body;
 
     const user: any = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Update fields if provided
+    // ✅ Partial updates
     if (name) user.name = name;
     if (email) user.email = email.toLowerCase();
+
+    // Update role-specific fields
     if (user.role === "driver") {
       if (vehicleInfo) user.vehicleInfo = vehicleInfo;
-
-      // 🌍 Handle driver location update (convert text → coordinates)
-      if (address) {
-        user.address = address;
-
-        try {
-          const response = await axios.get(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-              address
-            )}`
-          );
-
-          if (response.data.length > 0) {
-            const { lat, lon } = response.data[0];
-            user.location = {
-              type: "Point",
-              coordinates: [parseFloat(lon), parseFloat(lat)],
-            };
-          } else {
-            console.warn("⚠️ No coordinates found for:", location);
-          }
-        } catch (geoErr) {
-          console.error("❌ Geocoding failed:", geoErr);
-        }
-      }
     }
 
-    // If password provided, hash it
+    // Update address and auto-geocode for everyone with an address
+    if (address) {
+      user.address = address;
+      const location = await getCoordinatesFromAddress(address);
+      user.location = location;
+    }
+
+    // Hash password if provided
     if (password) {
       const salt = await bcrypt.genSalt(Number(process.env.BCRYPT_SALT || 10));
       user.password = await bcrypt.hash(password, salt);
@@ -194,7 +175,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 
     await user.save();
 
-    user.password = undefined; // never send password back
+    user.password = undefined; // never return password
     res.status(200).json({
       message: "Profile updated successfully",
       user,

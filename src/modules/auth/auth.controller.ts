@@ -1,8 +1,10 @@
 // src/modules/auth/auth.controller.ts
 import { Request, Response } from "express";
 import jwt, { SignOptions } from "jsonwebtoken";
-import { User } from "../user/user.model";
+import { IUser, User } from "../user/user.model";
 import bcrypt from "bcryptjs";
+import { AuthRequest } from "../../middlewares/auth.middleware";
+import axios from "axios";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey123";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1d";
@@ -21,7 +23,7 @@ const generateToken = (userId: string, role: string) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role, vehicleInfo } = req.body;
+    const { name, email, password, role, vehicleInfo, address } = req.body;
 
     if (!name || !email || !password || !role)
       return res.status(400).json({ message: "All fields required" });
@@ -31,12 +33,32 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email already in use" });
 
     let userData: any = { name, email: email.toLowerCase(), password, role };
+
     if (role === "driver") {
-      if (!vehicleInfo)
+      if (!vehicleInfo || !address)
         return res
           .status(400)
-          .json({ message: "Vehicle info required for drivers" });
+          .json({ message: "Drivers must provide vehicleInfo and address" });
+
+      // Geocode address → coordinates
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          address
+        )}`
+      );
+
+      if (response.data.length > 0) {
+        const { lat, lon } = response.data[0];
+        userData.location = {
+          type: "Point",
+          coordinates: [parseFloat(lon), parseFloat(lat)],
+        };
+      } else {
+        userData.location = { type: "Point", coordinates: [0, 0] };
+      }
+
       userData.vehicleInfo = vehicleInfo;
+      userData.address = address;
       userData.approvalStatus = "pending";
       userData.isOnline = false;
     }
@@ -124,4 +146,61 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id; // from protect middleware
+    const { name, email, password, vehicleInfo, address } = req.body;
 
+    const user: any = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update fields if provided
+    if (name) user.name = name;
+    if (email) user.email = email.toLowerCase();
+    if (user.role === "driver") {
+      if (vehicleInfo) user.vehicleInfo = vehicleInfo;
+
+      // 🌍 Handle driver location update (convert text → coordinates)
+      if (address) {
+        user.address = address;
+
+        try {
+          const response = await axios.get(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              address
+            )}`
+          );
+
+          if (response.data.length > 0) {
+            const { lat, lon } = response.data[0];
+            user.location = {
+              type: "Point",
+              coordinates: [parseFloat(lon), parseFloat(lat)],
+            };
+          } else {
+            console.warn("⚠️ No coordinates found for:", location);
+          }
+        } catch (geoErr) {
+          console.error("❌ Geocoding failed:", geoErr);
+        }
+      }
+    }
+
+    // If password provided, hash it
+    if (password) {
+      const salt = await bcrypt.genSalt(Number(process.env.BCRYPT_SALT || 10));
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    await user.save();
+
+    user.password = undefined; // never send password back
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};

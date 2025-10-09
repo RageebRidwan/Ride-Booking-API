@@ -10,17 +10,17 @@ export const registerSchema = z.object({
         message: "Role must be one of admin, rider, driver",
       }),
       vehicleInfo: z.string().optional(),
-      address: z.string().min(1, "Address is required"),
+      address: z.string().optional(),
     })
     .refine(
       (data) => {
-        if (data.role === "driver") {
-          return !!data.vehicleInfo;
-        }
+        if (data.role === "driver") return !!data.vehicleInfo;
+        if (data.role === "rider") return !!data.address;
         return true;
       },
       {
-        message: "Drivers must provide vehicleInfo",
+        message:
+          "Drivers must provide vehicleInfo; Riders must provide address",
         path: ["vehicleInfo"],
       }
     ),

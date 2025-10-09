@@ -66,7 +66,7 @@ export const register = async (req: AuthRequest, res: Response) => {
     user.password = undefined;
     const token = generateToken(user._id, user.role);
 
-    res.status(201).json({ token, user, location });
+    res.status(201).json({ token, user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error });

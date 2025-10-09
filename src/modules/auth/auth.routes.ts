@@ -25,4 +25,5 @@ router.post("/reset-password", protect, requestPasswordReset);
 router.post("/reset-password/:token", protect, resetPassword);
 router.patch("/update", protect, validate(updateProfileSchema), updateProfile);
 
+
 export default router;

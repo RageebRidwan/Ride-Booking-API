@@ -164,7 +164,7 @@ export const updateRideStatus = async (req: AuthRequest, res: Response) => {
       completed: "completedAt",
     }[String(status)];
 
-    (ride.timestamps as any)[Number(timestampField)] = new Date();
+    (ride.timestamps as any)[String(timestampField)] = new Date();
     await ride.save();
 
     res.status(200).json({ message: `Ride status updated to ${status}`, ride });

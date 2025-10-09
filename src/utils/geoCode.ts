@@ -9,7 +9,7 @@ export const getCoordinatesFromAddress = async (address: string) => {
     );
 
     if (response.data.length > 0) {
-      const { lat, lon } = response.data[0];
+      const { lat, lon} = response.data[0];
       return {
         type: "Point",
         coordinates: [parseFloat(lon), parseFloat(lat)],

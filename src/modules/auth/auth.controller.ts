@@ -44,8 +44,9 @@ export const register = async (req: AuthRequest, res: Response) => {
     };
 
     if (address) {
+      const location = await getCoordinatesFromAddress(address)
       userData.address = address;
-      userData.location = await getCoordinatesFromAddress(address);
+      userData.location = location;
     }
 
     if (role === "driver") {
@@ -65,7 +66,7 @@ export const register = async (req: AuthRequest, res: Response) => {
     user.password = undefined;
     const token = generateToken(user._id, user.role);
 
-    res.status(201).json({ token, user });
+    res.status(201).json({ token, user, location });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error });
@@ -161,7 +162,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 
     // Update address and auto-geocode for everyone with an address
-    if (address) {
+    if (address && address.trim() !== "") {
       user.address = address;
       const location = await getCoordinatesFromAddress(address);
       user.location = location;

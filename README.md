@@ -1,9 +1,6 @@
-
 # Ride Booking API
 
 🚖 A secure, scalable, and role-based backend API for a ride booking system (like Uber/Pathao) built with Express.js, Mongoose, and TypeScript.
-
----
 
 ## Project Overview
 
@@ -16,8 +13,6 @@ This API allows:
 - Admins to manage users, approve/suspend drivers, view rides, and generate system stats.
 
 All rides are stored with complete history, and the API implements JWT-based authentication, role-based authorization, and real-time location handling for drivers.
-
----
 
 ## Features
 
@@ -39,8 +34,6 @@ All rides are stored with complete history, and the API implements JWT-based aut
 
 ✅ Full modular project structure for scalability.
 
----
-
 ## Technologies
 
 - Node.js + Express.js
@@ -54,8 +47,6 @@ All rides are stored with complete history, and the API implements JWT-based aut
 - Zod for validation
 
 - Axios (for geocoding)
-
----
 
 ## Installation & Setup
 
@@ -84,8 +75,6 @@ JWT_SECRET=<your-jwt-secret>
 JWT_EXPIRES_IN=1d
 BCRYPT_SALT=10
 ```
-
----
 
 ## API Endpoints
 
@@ -129,8 +118,6 @@ BCRYPT_SALT=10
 | PATCH  | `/api/admin/users/block/:id`     | Block/unblock user       |
 | GET    | `/api/admin/rides`               | View all rides           |
 
----
-
 ## Ride Lifecycle
 
 1. Requested – Rider requests a ride.
@@ -141,8 +128,6 @@ BCRYPT_SALT=10
 6. Cancelled – Rider cancels before acceptance.
 
 All timestamps are recorded for audit and history.
-
----
 
 ## Role-Based Access
 
@@ -177,4 +162,3 @@ Response: { message: "Ride Booking API is running!" }
 
 ### [🚀 Deployed on Render](https://library-management-api-m61d.onrender.com)
 
----

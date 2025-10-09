@@ -160,5 +160,5 @@ Response: { message: "Ride Booking API is running!" }
 
 ## 🌐 Live Link
 
-### [🚀 Deployed on Render](https://library-management-api-m61d.onrender.com)
+### [🚀 Deployed on Render](https://ride-booking-api-dltt.onrender.com)
 

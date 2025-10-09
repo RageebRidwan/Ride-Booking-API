@@ -42,7 +42,7 @@ router.patch(
   validate(riderFeedbackSchema),
   leaveFeedback
 );
-router.get(
+router.post(
   "/drivers/nearby",
   protect,
   authorize("rider"),

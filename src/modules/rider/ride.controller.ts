@@ -4,6 +4,7 @@ import { Ride } from "./ride.model";
 import { AuthRequest } from "../../middlewares/auth.middleware";
 import haversine from "haversine-distance";
 import { User } from "../user/user.model";
+import { getCoordinatesFromAddress } from "../../utils/geoCode";
 // Request a ride
 export const requestRide = async (req: AuthRequest, res: Response) => {
   try {
@@ -255,29 +256,29 @@ export const leaveFeedback = async (req: AuthRequest, res: Response) => {
 
 export const findNearbyDrivers = async (req: AuthRequest, res: Response) => {
   try {
-    const { lat, lng, maxDistance = 5000 } = req.query; // maxDistance in meters
-    if (!lat || !lng)
-      return res
-        .status(400)
-        .json({ message: "Latitude and longitude required" });
+    const { loc, maxDistance = 5000 } = req.body; // loc = address
+
+    if (!loc) return res.status(400).json({ message: "Location is required" });
+
+    // Convert address to GeoJSON coordinates
+    const lonLat = await getCoordinatesFromAddress(loc);
 
     const drivers = await User.find({
       role: "driver",
       isOnline: true,
       approvalStatus: "approved",
+      status: "active",
       location: {
         $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: [parseFloat(lng as string), parseFloat(lat as string)],
-          },
-          $maxDistance: parseInt(maxDistance as string),
+          $geometry: lonLat, // { type: 'Point', coordinates: [lng, lat] }
+          $maxDistance: parseInt(maxDistance as any), // meters
         },
       },
     }).select("name vehicleInfo location");
 
     res.status(200).json({ drivers });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error", err });
   }
 };

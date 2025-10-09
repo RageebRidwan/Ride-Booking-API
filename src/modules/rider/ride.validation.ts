@@ -35,9 +35,11 @@ export const riderFeedbackSchema = z.object({
 
 
 export const nearbyDriversSchema = z.object({
-  query: z.object({
-    lat: z.string(),
-    lng: z.string(),
-    maxDistance: z.string().optional(),
+  body: z.object({
+    loc: z.string().min(1, "Location is required"), // address string
+    maxDistance: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val) : 5000)), // optional, default 5000
   }),
 });

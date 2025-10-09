@@ -23,7 +23,8 @@ const generateToken = (userId: string, role: string) => {
 
 export const register = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, email, password, role, vehicleInfo, address } = req.body;
+    const { name, email, password, role, vehicleInfo, currentLocation } =
+      req.body;
 
     if (!name || !email || !password || !role)
       return res.status(400).json({ message: "All fields required" });
@@ -33,8 +34,8 @@ export const register = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "Email already in use" });
 
     // ✅ For both riders and drivers, address is required
-    if ((role === "rider" || role === "driver") && !address)
-      return res.status(400).json({ message: "Address is required" });
+    if ((role === "rider" || role === "driver") && !currentLocation)
+      return res.status(400).json({ message: "Current location is required" });
 
     const userData: any = {
       name,
@@ -43,9 +44,9 @@ export const register = async (req: AuthRequest, res: Response) => {
       role,
     };
 
-    if (address) {
-      const location = await getCoordinatesFromAddress(address)
-      userData.address = address;
+    if (currentLocation) {
+      const location = await getCoordinatesFromAddress(currentLocation);
+      userData.currentLocation = currentLocation;
       userData.location = location;
     }
 
@@ -57,7 +58,6 @@ export const register = async (req: AuthRequest, res: Response) => {
 
       userData.vehicleInfo = vehicleInfo;
       userData.approvalStatus = "pending";
-      userData.isOnline = false;
     }
 
     const user: any = new User(userData);
@@ -133,9 +133,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Hash new password
-    const salt = await bcrypt.genSalt(Number(process.env.BCRYPT_SALT || 10));
-    user.password = await bcrypt.hash(password, salt);
+    user.password = password;
     await user.save();
 
     res.status(200).json({ message: "Password reset successful" });
@@ -147,7 +145,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    const { name, email, password, vehicleInfo, address } = req.body;
+    const { name, email, password, vehicleInfo, currentLocation } = req.body;
 
     const user: any = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -162,18 +160,14 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 
     // Update address and auto-geocode for everyone with an address
-    if (address && address.trim() !== "") {
-      user.address = address;
-      const location = await getCoordinatesFromAddress(address);
+    if (currentLocation && currentLocation.trim() !== "") {
+      user.address = currentLocation;
+      const location = await getCoordinatesFromAddress(currentLocation);
       user.location = location;
     }
-
-    // Hash password if provided
     if (password) {
-      const salt = await bcrypt.genSalt(Number(process.env.BCRYPT_SALT || 10));
-      user.password = await bcrypt.hash(password, salt);
+      user.password = password;
     }
-
     await user.save();
 
     user.password = undefined; // never return password

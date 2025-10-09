@@ -10,17 +10,17 @@ export const registerSchema = z.object({
         message: "Role must be one of admin, rider, driver",
       }),
       vehicleInfo: z.string().optional(),
-      address: z.string().optional(),
+      currentLocation: z.string().optional(),
     })
     .refine(
       (data) => {
         if (data.role === "driver") return !!data.vehicleInfo;
-        if (data.role === "rider") return !!data.address;
+        if (data.role === "rider") return !!data.currentLocation;
         return true;
       },
       {
         message:
-          "Drivers must provide vehicleInfo; Riders must provide address",
+          "Drivers must provide vehicleInfo; Riders must provide current location",
         path: ["vehicleInfo"],
       }
     ),
@@ -45,6 +45,6 @@ export const updateProfileSchema = z.object({
       .min(6, "Password must be at least 6 characters")
       .optional(),
     vehicleInfo: z.string().optional(),
-    address: z.string().optional(),
+    currentLocation: z.string().optional(),
   }),
 });

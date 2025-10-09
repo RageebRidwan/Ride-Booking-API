@@ -11,7 +11,7 @@ export interface IUser extends Document {
   password: string;
   role: Role;
   status: UserStatus;
-  address: string;
+  currentLocation: string;
   vehicleInfo?: string; // For drivers
   isOnline?: boolean; // For drivers
   approvalStatus?: "pending" | "approved" | "rejected"; // For drivers
@@ -42,9 +42,9 @@ const userSchema = new Schema<IUser>(
       enum: ["active", "blocked", "suspended"],
       default: "active",
     },
-    address: { type: String },
+    currentLocation: { type: String },
     vehicleInfo: { type: String },
-    isOnline: { type: Boolean, default: false },
+    isOnline: { type: Boolean, default: true },
     approvalStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],

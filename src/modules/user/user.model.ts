@@ -11,10 +11,10 @@ export interface IUser extends Document {
   password: string;
   role: Role;
   status: UserStatus;
-  currentLocation: string;
+  currentLocation?: string;
   vehicleInfo?: string; // For drivers
-  isOnline?: boolean; // For drivers
-  approvalStatus?: "pending" | "approved" | "rejected"; // For drivers
+  isOnline?: boolean;
+  approvalStatus?: "pending" | "approved" | "rejected";
   comparePassword(candidatePassword: string): Promise<boolean>;
   ratings?: number[];
   averageRating?: number;

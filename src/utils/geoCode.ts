@@ -1,10 +1,10 @@
 import axios from "axios";
 
-export const getCoordinatesFromAddress = async (address: string) => {
+export const getCoordinatesFromAddress = async (currentLocation: string) => {
   try {
     const response = await axios.get(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        address
+        currentLocation
       )}`
     );
 

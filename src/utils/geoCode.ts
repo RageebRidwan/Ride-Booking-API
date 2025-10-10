@@ -5,7 +5,14 @@ export const getCoordinatesFromAddress = async (currentLocation: string) => {
     const response = await axios.get(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
         currentLocation
-      )}`
+      )}`,
+      {
+        headers: {
+          "User-Agent":
+            "Ride-Booking-API-Project (https://ride-booking-api-dltt.onrender.com/)", // 👈 Must be unique and valid
+          "Accept-Language": "en",
+        },
+      }
     );
 
     if (response.data.length > 0) {

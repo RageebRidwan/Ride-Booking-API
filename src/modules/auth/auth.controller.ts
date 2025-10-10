@@ -161,7 +161,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 
     // Update address and auto-geocode for everyone with an address
     if (currentLocation && currentLocation.trim() !== "") {
-      user.address = currentLocation;
+      user.currentLocation = currentLocation;
       const location = await getCoordinatesFromAddress(currentLocation);
       user.location = location;
     }

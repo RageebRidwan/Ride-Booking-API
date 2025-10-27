@@ -1,4 +1,3 @@
-// src/modules/user/user.routes.ts
 import { Router } from "express";
 import UserController from "./user.controller";
 import { protect } from "../../middlewares/auth.middleware";
@@ -7,7 +6,6 @@ import { changePasswordSchema, updateProfileSchema } from "./user.validation";
 
 const router = Router();
 
-// All routes require authentication
 router.use(protect);
 
 // GET /api/users/profile

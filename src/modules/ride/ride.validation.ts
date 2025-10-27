@@ -1,4 +1,3 @@
-// src/modules/ride/ride.validation.ts
 import { z } from "zod";
 
 export const requestRideSchema = z.object({

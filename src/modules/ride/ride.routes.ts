@@ -1,4 +1,3 @@
-// src/modules/ride/ride.routes.ts
 import { Router } from "express";
 import RideController from "./ride.controller";
 import { protect, authorize } from "../../middlewares/auth.middleware";

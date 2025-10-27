@@ -134,8 +134,8 @@ class AuthService {
       expiresIn: RESET_EXPIRES_IN,
     } as SignOptions);
 
-    // In production, send email with reset link
-    // For now, return token in response
+    // In production, we can send email with reset link
+    // For now, returning token in response
     return { resetToken, message: "Password reset token generated" };
   }
 

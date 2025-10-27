@@ -1,4 +1,3 @@
-// src/modules/user/user.validation.ts
 import { z } from "zod";
 
 export const updateProfileSchema = z.object({

@@ -1,4 +1,3 @@
-// src/modules/ride/ride.controller.ts
 import { Request, Response, NextFunction } from "express";
 import RideService from "./ride.service";
 import ApiResponse from "../../utils/ApiResponse";

@@ -1,4 +1,3 @@
-// src/utils/queryBuilder.ts
 import { Query } from "mongoose";
 
 interface QueryParams {

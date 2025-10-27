@@ -1,4 +1,3 @@
-// src/modules/user/user.controller.ts
 import { Request, Response, NextFunction } from "express";
 import UserService from "./user.service";
 import ApiResponse from "../../utils/ApiResponse";

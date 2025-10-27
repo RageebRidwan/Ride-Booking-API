@@ -1,16 +1,13 @@
-
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-
 
 import authRoutes from "./modules/auth/auth.routes";
 import userRoutes from "./modules/user/user.routes";
 import rideRoutes from "./modules/ride/ride.routes";
 import driverRoutes from "./modules/driver/driver.routes";
 import adminRoutes from "./modules/admin/admin.routes";
-
 
 import { errorHandler, notFound } from "./middlewares/error.middleware";
 

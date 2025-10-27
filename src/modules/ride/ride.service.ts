@@ -1,4 +1,3 @@
-// src/modules/ride/ride.service.ts
 import { Ride } from "./ride.model";
 import { User } from "../user/user.model";
 import ApiError from "../../utils/ApiError";
@@ -65,7 +64,7 @@ class RideService {
       riderId,
       pickup,
       destination,
-      fare: Math.round(fare * 100) / 100, // Round to 2 decimals
+      fare: Math.round(fare * 100) / 100,
     });
 
     await ride.save();

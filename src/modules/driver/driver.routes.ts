@@ -1,4 +1,3 @@
-// src/modules/driver/driver.routes.ts
 import { Router } from "express";
 import DriverController from "./driver.controller";
 import { protect, authorize } from "../../middlewares/auth.middleware";
@@ -8,7 +7,6 @@ import { updateRideStatusSchema } from "../ride/ride.validation";
 
 const router = Router();
 
-// All routes require authentication and driver role
 router.use(protect, authorize("driver"));
 
 // PATCH /api/drivers/availability

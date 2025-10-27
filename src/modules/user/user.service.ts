@@ -29,7 +29,6 @@ class UserService {
       throw new ApiError(404, "User not found");
     }
 
-    // Check if email already exists (if updating email)
     if (updateData.email && updateData.email !== user.email) {
       const existingUser = await User.findOne({
         email: updateData.email.toLowerCase(),

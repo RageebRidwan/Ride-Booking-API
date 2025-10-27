@@ -1,50 +1,106 @@
-// src/modules/driver/driver.controller.ts
-import { AuthRequest } from "../../middlewares/auth.middleware";
-import { Ride } from "../rider/ride.model";
-import { User } from "../user/user.model";
-import { Request, Response } from "express";
-// Set online/offline
-export const setAvailability = async (req: AuthRequest, res: Response) => {
-  try {
-    const { isOnline } = req.body;
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: "Driver not found" });
+import { Request, Response, NextFunction } from "express";
+import DriverService from "./driver.service";
+import ApiResponse from "../../utils/ApiResponse";
 
-    if (user.role !== "driver")
-      return res
-        .status(403)
-        .json({ message: "Only drivers can set availability" });
-    user.isOnline = isOnline;
-    await user.save();
-
-    res.status(200).json({
-      message: `Driver is now ${isOnline ? "online" : "offline"}`,
-      user,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", err });
+class DriverController {
+  // PATCH /drivers/availability
+  async setAvailability(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { isOnline } = req.body;
+      const driver = await DriverService.setAvailability(
+        req.user!.id,
+        isOnline
+      );
+      ApiResponse.success(
+        res,
+        200,
+        `Driver is now ${isOnline ? "online" : "offline"}`,
+        { driver }
+      );
+    } catch (error) {
+      next(error);
+    }
   }
-};
 
-// src/modules/driver/driver.controller.ts
-export const getDriverRating = async (req: AuthRequest, res: Response) => {
-  try {
-    const rides = await Ride.find({
-      driverId: req.params.id,
-      driverRating: { $exists: true },
-    });
-
-    if (!rides.length)
-      return res.status(200).json({ averageRating: 0, totalRatings: 0 });
-
-    const total = rides.reduce(
-      (sum, ride) => sum + (Number(ride.driverRating) ?? 0),
-      0
-    );
-    const averageRating = (total / rides.length).toFixed(2);
-
-    res.status(200).json({ averageRating, totalRatings: rides.length });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", err });
+  // GET /drivers/rides/pending
+  async getPendingRides(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { rides, pagination } = await DriverService.getPendingRides(
+        req.user!.id,
+        req.query
+      );
+      ApiResponse.paginated(
+        res,
+        200,
+        "Pending rides retrieved successfully",
+        rides,
+        pagination
+      );
+    } catch (error) {
+      next(error);
+    }
   }
-};
+
+  // PATCH /drivers/rides/:id/accept
+  async acceptRide(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ride = await DriverService.acceptRide(req.user!.id, req.params.id);
+      ApiResponse.success(res, 200, "Ride accepted successfully", { ride });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // PATCH /drivers/rides/:id/status
+  async updateRideStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { status } = req.body;
+      const ride = await DriverService.updateRideStatus(
+        req.user!.id,
+        req.params.id,
+        status
+      );
+      ApiResponse.success(res, 200, `Ride status updated to ${status}`, {
+        ride,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /drivers/rides/history
+  async getDriverHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { rides, pagination } = await DriverService.getDriverHistory(
+        req.user!.id,
+        req.query
+      );
+      ApiResponse.paginated(
+        res,
+        200,
+        "Driver ride history retrieved successfully",
+        rides,
+        pagination
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /drivers/rides/earnings
+  async getEarnings(req: Request, res: Response, next: NextFunction) {
+    try {
+      const earnings = await DriverService.getEarnings(req.user!.id);
+      ApiResponse.success(
+        res,
+        200,
+        "Earnings retrieved successfully",
+        earnings
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+export default new DriverController();

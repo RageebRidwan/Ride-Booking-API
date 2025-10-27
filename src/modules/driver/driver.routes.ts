@@ -1,35 +1,52 @@
 // src/modules/driver/driver.routes.ts
 import { Router } from "express";
-import { setAvailability } from "./driver.controller";
+import DriverController from "./driver.controller";
 import { protect, authorize } from "../../middlewares/auth.middleware";
-import {
-  acceptRide,
-  updateRideStatus,
-  getEarnings,
-} from "../rider/ride.controller";
-import { availabilitySchema } from "./driver.validation";
 import { validate } from "../../middlewares/validate.middleware";
-import { updateRideStatusSchema } from "../rider/ride.validation";
+import { availabilitySchema } from "./driver.validation";
+import { updateRideStatusSchema } from "../ride/ride.validation";
 
 const router = Router();
 
+// All routes require authentication and driver role
+router.use(protect, authorize("driver"));
+
+// PATCH /api/drivers/availability
 router.patch(
   "/availability",
-  protect,
-  authorize("driver"),
   validate(availabilitySchema),
-  setAvailability
+  DriverController.setAvailability.bind(DriverController)
 );
 
-// Ride actions
-router.patch("/rides/:id/accept", protect, authorize("driver"), acceptRide);
+// GET /api/drivers/rides/pending
+router.get(
+  "/rides/pending",
+  DriverController.getPendingRides.bind(DriverController)
+);
+
+// GET /api/drivers/rides/history
+router.get(
+  "/rides/history",
+  DriverController.getDriverHistory.bind(DriverController)
+);
+
+// GET /api/drivers/rides/earnings
+router.get(
+  "/rides/earnings",
+  DriverController.getEarnings.bind(DriverController)
+);
+
+// PATCH /api/drivers/rides/:id/accept
+router.patch(
+  "/rides/:id/accept",
+  DriverController.acceptRide.bind(DriverController)
+);
+
+// PATCH /api/drivers/rides/:id/status
 router.patch(
   "/rides/:id/status",
-  protect,
-  authorize("driver"),
   validate(updateRideStatusSchema),
-  updateRideStatus
+  DriverController.updateRideStatus.bind(DriverController)
 );
-router.get("/rides/earnings", protect, authorize("driver"), getEarnings);
 
 export default router;

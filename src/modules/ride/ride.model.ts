@@ -1,4 +1,3 @@
-// src/modules/ride/ride.model.ts
 import { Schema, model, Document } from "mongoose";
 import { IUser } from "../user/user.model";
 
@@ -35,6 +34,7 @@ export interface IRide extends Document {
   };
   riderFeedback?: string;
   driverRating?: number;
+  cancellationReason?: string;
 }
 
 const rideSchema = new Schema<IRide>(
@@ -66,6 +66,7 @@ const rideSchema = new Schema<IRide>(
     fare: { type: Number, default: 0 },
     driverRating: { type: Number, min: 1, max: 5 },
     riderFeedback: { type: String },
+    cancellationReason: { type: String },
     timestamps: {
       requestedAt: { type: Date, default: Date.now },
       acceptedAt: Date,

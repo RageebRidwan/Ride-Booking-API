@@ -2,26 +2,26 @@
 import { Schema, model, Document } from "mongoose";
 import bcrypt from "bcryptjs";
 
-export type Role = "admin" | "rider" | "driver";
-export type UserStatus = "active" | "blocked" | "suspended";
+type Role = "admin" | "rider" | "driver";
+type UserStatus = "active" | "blocked" | "suspended";
 
 export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  phoneNumber?: string;
   role: Role;
   status: UserStatus;
   currentLocation?: string;
-  vehicleInfo?: string; // For drivers
+  vehicleInfo?: string;
   isOnline?: boolean;
   approvalStatus?: "pending" | "approved" | "rejected";
   comparePassword(candidatePassword: string): Promise<boolean>;
   ratings?: number[];
   averageRating?: number;
-  // Geo location for drivers
   location?: {
     type: "Point";
-    coordinates: [number, number]; // [lng, lat]
+    coordinates: [number, number];
   };
   cancelAttempts: number;
   lastCancelAt: Date;
@@ -32,6 +32,7 @@ const userSchema = new Schema<IUser>(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    phoneNumber: { type: String },
     role: {
       type: String,
       enum: ["admin", "rider", "driver"],
@@ -56,11 +57,12 @@ const userSchema = new Schema<IUser>(
     lastCancelAt: { type: Date, default: null },
     location: {
       type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
+      coordinates: { type: [Number], default: [0, 0] },
     },
   },
   { timestamps: true }
 );
+
 userSchema.index({ location: "2dsphere" });
 
 // Hash password before saving

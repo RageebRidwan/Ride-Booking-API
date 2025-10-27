@@ -6,6 +6,7 @@ export const registerSchema = z.object({
       name: z.string().min(1, "Name is required"),
       email: z.string().email("Valid email is required"),
       password: z.string().min(6, "Password must be at least 6 characters"),
+      phoneNumber: z.string().optional(),
       role: z.enum(["admin", "rider", "driver"], {
         message: "Role must be one of admin, rider, driver",
       }),
@@ -14,13 +15,14 @@ export const registerSchema = z.object({
     })
     .refine(
       (data) => {
-        if (data.role === "driver") return !!data.vehicleInfo;
+        if (data.role === "driver")
+          return !!data.vehicleInfo && !!data.currentLocation;
         if (data.role === "rider") return !!data.currentLocation;
         return true;
       },
       {
         message:
-          "Drivers must provide vehicleInfo; Riders must provide current location",
+          "Drivers must provide vehicleInfo and currentLocation; Riders must provide currentLocation",
         path: ["vehicleInfo"],
       }
     ),
@@ -28,23 +30,19 @@ export const registerSchema = z.object({
 
 export const loginSchema = z.object({
   body: z.object({
-    email: z
-      .string()
-      .email("Valid email is required")
-      .transform((val) => val.toLowerCase()),
+    email: z.string().email("Valid email is required"),
     password: z.string().min(1, "Password is required"),
   }),
 });
 
-export const updateProfileSchema = z.object({
+export const requestResetSchema = z.object({
   body: z.object({
-    name: z.string().min(1, "Name cannot be empty").optional(),
-    email: z.string().email("Valid email required").optional(),
-    password: z
-      .string()
-      .min(6, "Password must be at least 6 characters")
-      .optional(),
-    vehicleInfo: z.string().optional(),
-    currentLocation: z.string().optional(),
+    email: z.string().email("Valid email is required"),
+  }),
+});
+
+export const resetPasswordSchema = z.object({
+  body: z.object({
+    password: z.string().min(6, "Password must be at least 6 characters"),
   }),
 });

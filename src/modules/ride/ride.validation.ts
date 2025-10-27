@@ -1,3 +1,4 @@
+// src/modules/ride/ride.validation.ts
 import { z } from "zod";
 
 export const requestRideSchema = z.object({
@@ -15,9 +16,9 @@ export const requestRideSchema = z.object({
   }),
 });
 
-export const updateRideStatusSchema = z.object({
+export const cancelRideSchema = z.object({
   body: z.object({
-    status: z.enum(["picked_up", "in_transit", "completed"], "Invalid status"),
+    reason: z.string().optional(),
   }),
 });
 
@@ -33,13 +34,17 @@ export const riderFeedbackSchema = z.object({
   }),
 });
 
-
 export const nearbyDriversSchema = z.object({
   body: z.object({
-    loc: z.string().min(1, "Location is required"), // address string
-    maxDistance: z
-      .string()
-      .optional()
-      .transform((val) => (val ? parseInt(val) : 5000)), // optional, default 5000
+    loc: z.string().min(1, "Location is required"),
+    maxDistance: z.number().optional().default(5000),
+  }),
+});
+
+export const updateRideStatusSchema = z.object({
+  body: z.object({
+    status: z.enum(["picked_up", "in_transit", "completed"], {
+      message: "Invalid status",
+    }),
   }),
 });

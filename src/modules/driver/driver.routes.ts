@@ -46,5 +46,9 @@ router.patch(
   validate(updateRideStatusSchema),
   DriverController.updateRideStatus.bind(DriverController)
 );
+router.post(
+  "/rides/:id/cancel",
+  DriverController.cancelRide.bind(DriverController)
+);
 
 export default router;

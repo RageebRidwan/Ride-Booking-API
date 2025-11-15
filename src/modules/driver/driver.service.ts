@@ -41,6 +41,7 @@ class DriverService {
     const query = Ride.find({
       status: RIDE_STATUS.REQUESTED,
       driverId: { $exists: false },
+      cancelledByDriverId: { $ne: driverId },
     }).populate("riderId", "name phoneNumber");
 
     const queryBuilder = new QueryBuilder(query, queryParams).sort().paginate();
@@ -49,6 +50,7 @@ class DriverService {
     const countQuery: any = Ride.find({
       status: RIDE_STATUS.REQUESTED,
       driverId: { $exists: false },
+      cancelledByDriverId: { $ne: driverId },
     });
     const pagination = await queryBuilder.getPaginationInfo(countQuery);
 
@@ -210,6 +212,30 @@ class DriverService {
       totalRides: rides.length,
       rides,
     };
+  }
+  async cancelRide(driverId: string, rideId: string) {
+    const ride = await Ride.findById(rideId);
+    if (!ride) {
+      throw new ApiError(404, "Ride not found");
+    }
+
+    if (ride.driverId?.toString() !== driverId) {
+      throw new ApiError(403, "Not authorized to cancel this ride");
+    }
+
+    // Can only cancel if accepted (not picked up yet)
+    if (ride.status !== RIDE_STATUS.ACCEPTED) {
+      throw new ApiError(400, "Can only cancel rides in 'accepted' status");
+    }
+
+    ride.status = RIDE_STATUS.REQUESTED;
+    ride.timestamps.cancelledAt = new Date();
+    // if (reason) ride.cancellationReason = reason;
+    ride.cancelledByDriverId = driverId;
+    ride.driverId = undefined; // Remove driver assignment
+    await ride.save();
+
+    return ride;
   }
 }
 

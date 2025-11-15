@@ -35,6 +35,7 @@ export interface IRide extends Document {
   riderFeedback?: string;
   driverRating?: number;
   cancellationReason?: string;
+  cancelledByDriverId?: IUser["_id"];
 }
 
 const rideSchema = new Schema<IRide>(
@@ -67,6 +68,7 @@ const rideSchema = new Schema<IRide>(
     driverRating: { type: Number, min: 1, max: 5 },
     riderFeedback: { type: String },
     cancellationReason: { type: String },
+    cancelledByDriverId: { type: Schema.Types.ObjectId, ref: "User" },
     timestamps: {
       requestedAt: { type: Date, default: Date.now },
       acceptedAt: Date,

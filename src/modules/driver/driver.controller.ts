@@ -101,6 +101,14 @@ class DriverController {
       next(error);
     }
   }
+  async cancelRide(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ride = await DriverService.cancelRide(req.user!.id, req.params.id);
+      ApiResponse.success(res, 200, "Ride cancelled successfully", { ride });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new DriverController();
